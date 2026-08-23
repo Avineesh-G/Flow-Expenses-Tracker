@@ -27,7 +27,6 @@ export default function ProfileSetupScreen({ user, onComplete }: Props) {
   const [dailyLimit, setDailyLimit] = useState("");
   const [catBudgets, setCatBudgets] = useState<Record<string, string>>({});
   const [showCategoryBudgets, setShowCategoryBudgets] = useState(false);
-  const [title, setTitle] = useState<"Mr." | "Mrs." | "Ms." | "None">("None");
   const [error, setError] = useState<string | null>(null);
 
   const handleLimitChange = (val: string) => {
@@ -99,13 +98,6 @@ export default function ProfileSetupScreen({ user, onComplete }: Props) {
         userType: "other",
         pocketMoneyLimit: undefined,
         dailySpendLimit: undefined,
-        title: title !== "None" ? title : undefined,
-      });
-    }
-
-    if (selectedType === "student") {
-      updateSettings({
-        title: title !== "None" ? title : undefined,
       });
     }
 
@@ -152,26 +144,6 @@ export default function ProfileSetupScreen({ user, onComplete }: Props) {
         >
           Select the option that best fits your daily spending and saving goals.
         </motion.p>
-      </div>
-
-      <div className="relative z-10 mt-6 bg-white/70 rounded-3xl p-5 border-2 border-transparent">
-        <label className="block text-xs font-semibold text-stone-600 mb-2">How should we address you? (Optional)</label>
-        <div className="flex gap-2">
-          {["Mr.", "Mrs.", "Ms.", "None"].map((t) => (
-            <button
-              key={t}
-              onClick={() => {
-                hapticLight();
-                setTitle(t as any);
-              }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                title === t ? "bg-sage-600 text-white shadow-soft" : "bg-stone-50 text-stone-600 hover:bg-stone-100"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Profile Options */}

@@ -107,7 +107,7 @@ export default function HomeScreen() {
             HELLO
           </p>
           <h1 className="text-xl font-semibold text-stone-800 tracking-tight">
-            {settings.title ? `${settings.title} ` : ""}{settings.name || "There"}
+            Mr. {settings.name || "There"}
           </h1>
         </div>
 

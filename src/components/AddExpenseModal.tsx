@@ -27,16 +27,6 @@ export default function AddExpenseModal({ isOpen, onClose }: Props) {
     if (suggested && !category) setCategory(suggested);
   };
 
-  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      hapticSuccess();
-      // Simulate receipt scanning for now
-      setAmount("250");
-      setDescription("Grocery store");
-      setCategory("food");
-    }
-  };
-
   const handleSubmit = useCallback(async () => {
     if (!amount || !description) return;
 
@@ -106,30 +96,18 @@ export default function AddExpenseModal({ isOpen, onClose }: Props) {
                     <label className="block text-sm font-medium text-stone-500 mb-2">
                       Amount
                     </label>
-                    <div className="relative flex gap-2">
-                      <div className="relative flex-1">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-stone-400 font-light">
-                          ₹
-                        </span>
-                        <input
-                          type="number"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          placeholder="0"
-                          className="w-full pl-10 pr-4 py-4 text-3xl font-semibold bg-stone-50 rounded-2xl border-0 focus:ring-2 focus:ring-sage-300 outline-none text-stone-800 placeholder:text-stone-300"
-                          autoFocus
-                        />
-                      </div>
-                      <label className="flex items-center justify-center w-16 bg-stone-100 text-stone-500 hover:text-sage-700 hover:bg-sage-100 rounded-2xl cursor-pointer transition-colors shrink-0">
-                        <Camera size={24} />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          className="hidden"
-                          onChange={handleCameraCapture}
-                        />
-                      </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-stone-400 font-light">
+                        ₹
+                      </span>
+                      <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0"
+                        className="w-full pl-10 pr-4 py-4 text-3xl font-semibold bg-stone-50 rounded-2xl border-0 focus:ring-2 focus:ring-sage-300 outline-none text-stone-800 placeholder:text-stone-300"
+                        autoFocus
+                      />
                     </div>
                   </div>
 
@@ -218,9 +196,16 @@ export default function AddExpenseModal({ isOpen, onClose }: Props) {
 
                   <div className="flex gap-3">
                     <button
+                      onClick={() => setShowScreenshot(true)}
+                      className="flex items-center justify-center gap-2 px-4 py-3.5 bg-stone-100 text-stone-600 rounded-2xl font-medium active:scale-95 transition-transform"
+                    >
+                      <Camera size={18} />
+                      Screenshot
+                    </button>
+                    <button
                       onClick={handleSubmit}
                       disabled={!amount || !description}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 bg-sage-700 text-white rounded-2xl font-medium shadow-soft active:scale-95 transition-transform disabled:opacity-40 disabled:active:scale-100"
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-sage-700 text-white rounded-2xl font-medium shadow-soft active:scale-95 transition-transform disabled:opacity-40 disabled:active:scale-100"
                     >
                       <Check size={18} />
                       Save Expense
