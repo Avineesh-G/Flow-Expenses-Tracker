@@ -44,8 +44,15 @@ async function fetchUserProfile(token: string): Promise<GoogleUser> {
 
 // Manually redirect to Google OAuth — works on ALL browsers including mobile
 function redirectToGoogle() {
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  
+  if (!clientId || clientId === "undefined") {
+    alert("ERROR: The Google Client ID is missing in Vercel!\n\nPlease go to your Vercel Dashboard -> Settings -> Environment Variables.\nMake sure VITE_GOOGLE_CLIENT_ID is fully saved, then click 'Deployments' and 'Redeploy' the latest build.");
+    return;
+  }
+
   const params = new URLSearchParams({
-    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    client_id: clientId,
     redirect_uri: window.location.origin,
     response_type: "token",
     scope: SCOPES,
