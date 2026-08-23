@@ -46,8 +46,7 @@ async function fetchUserProfile(token: string): Promise<GoogleUser> {
 // Manually redirect to Google OAuth — works on ALL browsers including mobile
 function redirectToGoogle() {
   const params = new URLSearchParams({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    client_id: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID,
+    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
     redirect_uri: window.location.origin,
     response_type: "token",
     scope: SCOPES,
