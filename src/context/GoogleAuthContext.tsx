@@ -6,7 +6,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { useGoogleLogin, googleLogout } from "@react-oauth/google";
+import { googleLogout } from "@react-oauth/google";
 
 export interface GoogleUser {
   name: string;
@@ -35,11 +35,25 @@ const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
 ].join(" ");
 
-async function fetchUserProfile(token: string) {
+async function fetchUserProfile(token: string): Promise<GoogleUser> {
   const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
     headers: { Authorization: `Bearer ${token}` },
   });
-  return res.json();
+  const profile = await res.json();
+  return { name: profile.name, email: profile.email, picture: profile.picture };
+}
+
+// Manually redirect to Google OAuth — works on ALL browsers including mobile
+function redirectToGoogle() {
+  const params = new URLSearchParams({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    client_id: (import.meta as any).env.VITE_GOOGLE_CLIENT_ID,
+    redirect_uri: window.location.origin,
+    response_type: "token",
+    scope: SCOPES,
+    include_granted_scopes: "true",
+  });
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
 export function GoogleAuthProvider({ children }: { children: ReactNode }) {
@@ -48,7 +62,7 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // On mount, check if Google redirected back with a token in the URL hash
+  // On mount, check if Google returned an access token in the URL hash
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && hash.includes("access_token")) {
@@ -56,11 +70,11 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
       const token = params.get("access_token");
       if (token) {
         setIsLoading(true);
-        // Clean up the URL so the token doesn't stay visible
+        // Clean the token out of the URL immediately for security
         window.history.replaceState(null, "", window.location.pathname);
         fetchUserProfile(token)
           .then((profile) => {
-            setUser({ name: profile.name, email: profile.email, picture: profile.picture });
+            setUser(profile);
             setAccessToken(token);
           })
           .catch(() => setError("Failed to fetch user profile. Please try again."))
@@ -69,34 +83,9 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const signIn = useGoogleLogin({
-    scope: SCOPES,
-    // Use redirect mode — works reliably on ALL mobile browsers
-    // Popup mode is blocked by COOP policy on mobile
-    ux_mode: "redirect",
-    redirect_uri: window.location.origin,
-    onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const profile = await fetchUserProfile(tokenResponse.access_token);
-        setUser({
-          name: profile.name,
-          email: profile.email,
-          picture: profile.picture,
-        });
-        setAccessToken(tokenResponse.access_token);
-      } catch {
-        setError("Failed to fetch user profile. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    onError: () => {
-      setError("Sign-in was cancelled or failed. Please try again.");
-      setIsLoading(false);
-    },
-  });
+  const signIn = useCallback(() => {
+    redirectToGoogle();
+  }, []);
 
   const signOut = useCallback(() => {
     googleLogout();
