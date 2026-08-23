@@ -79,6 +79,7 @@ const defaultSettings: UserSettings = {
   currency: "₹",
   email: "",
   hapticsEnabled: true,
+  hapticsIntensity: "medium",
   reducedMotion: false,
   darkMode: false,
   emailDigest: "monthly",

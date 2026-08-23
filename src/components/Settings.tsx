@@ -114,12 +114,36 @@ export default function Settings() {
             Preferences
           </h3>
           <div className="space-y-3">
-            <SettingRow
-              icon={Smartphone}
-              label="Haptic Feedback"
-              value={settings.hapticsEnabled}
-              onToggle={() => toggle("hapticsEnabled")}
-            />
+            {/* Haptic Feedback toggle */}
+            <div>
+              <SettingRow
+                icon={Smartphone}
+                label="Haptic Feedback"
+                value={settings.hapticsEnabled}
+                onToggle={() => toggle("hapticsEnabled")}
+              />
+              {/* Intensity sub-section — only visible when haptics is ON */}
+              {settings.hapticsEnabled && (
+                <div className="mt-3 ml-7 flex gap-2">
+                  {(["low", "medium", "high"] as const).map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => {
+                        hapticLight();
+                        updateSettings({ hapticsIntensity: level });
+                      }}
+                      className={`flex-1 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${
+                        (settings.hapticsIntensity ?? "medium") === level
+                          ? "bg-sage-600 text-white shadow-sm"
+                          : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <SettingRow
               icon={Moon}
               label="Dark Mode"

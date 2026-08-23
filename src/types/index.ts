@@ -44,6 +44,7 @@ export interface UserSettings {
   currency: string;
   email: string;
   hapticsEnabled: boolean;
+  hapticsIntensity: "low" | "medium" | "high";
   reducedMotion: boolean;
   darkMode: boolean;
   emailDigest: "weekly" | "monthly" | "never";
