@@ -85,6 +85,7 @@ const defaultSettings: UserSettings = {
   userType: undefined,
   pocketMoneyLimit: undefined,
   dailySpendLimit: undefined,
+  title: undefined,
 };
 
 interface Store extends AppState {

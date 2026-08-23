@@ -61,6 +61,19 @@ export default function Settings() {
           <h3 className="text-sm font-semibold text-stone-700 mb-4">Profile</h3>
           <div className="space-y-4">
             <div>
+              <label className="text-xs text-stone-500 mb-1 block">Title</label>
+              <select
+                value={settings.title || "None"}
+                onChange={(e) => updateSettings({ title: e.target.value === "None" ? undefined : e.target.value as any })}
+                className="w-full px-3 py-2 bg-stone-50 rounded-xl border-0 text-stone-800 focus:ring-2 focus:ring-sage-300 outline-none"
+              >
+                <option value="None">None</option>
+                <option value="Mr.">Mr.</option>
+                <option value="Mrs.">Mrs.</option>
+                <option value="Ms.">Ms.</option>
+              </select>
+            </div>
+            <div>
               <label className="text-xs text-stone-500 mb-1 block">Name</label>
               <input
                 type="text"
@@ -79,6 +92,28 @@ export default function Settings() {
                 className="w-full px-3 py-2 bg-stone-50 rounded-xl border-0 text-stone-800 focus:ring-2 focus:ring-sage-300 outline-none placeholder:text-stone-300"
               />
             </div>
+            {settings.userType === "student" && (
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="text-xs text-stone-500 mb-1 block">Pocket Money (₹)</label>
+                  <input
+                    type="number"
+                    value={settings.pocketMoneyLimit || ""}
+                    onChange={(e) => updateSettings({ pocketMoneyLimit: parseFloat(e.target.value) || undefined })}
+                    className="w-full px-3 py-2 bg-stone-50 rounded-xl border-0 text-stone-800 focus:ring-2 focus:ring-sage-300 outline-none"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-stone-500 mb-1 block">Daily Limit (₹)</label>
+                  <input
+                    type="number"
+                    value={settings.dailySpendLimit || ""}
+                    onChange={(e) => updateSettings({ dailySpendLimit: parseFloat(e.target.value) || undefined })}
+                    className="w-full px-3 py-2 bg-stone-50 rounded-xl border-0 text-stone-800 focus:ring-2 focus:ring-sage-300 outline-none"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
 

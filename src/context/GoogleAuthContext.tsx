@@ -62,8 +62,13 @@ function redirectToGoogle() {
 }
 
 export function GoogleAuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<GoogleUser | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [user, setUser] = useState<GoogleUser | null>(() => {
+    const stored = localStorage.getItem("flow_google_user");
+    return stored ? JSON.parse(stored) : null;
+  });
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    return localStorage.getItem("flow_google_token");
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,6 +86,8 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
           .then((profile) => {
             setUser(profile);
             setAccessToken(token);
+            localStorage.setItem("flow_google_token", token);
+            localStorage.setItem("flow_google_user", JSON.stringify(profile));
           })
           .catch(() => setError("Failed to fetch user profile. Please try again."))
           .finally(() => setIsLoading(false));
@@ -100,6 +107,8 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setAccessToken(null);
     setError(null);
+    localStorage.removeItem("flow_google_token");
+    localStorage.removeItem("flow_google_user");
   }, [accessToken]);
 
   return (

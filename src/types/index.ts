@@ -50,6 +50,7 @@ export interface UserSettings {
   userType?: "student" | "other";
   pocketMoneyLimit?: number;
   dailySpendLimit?: number;
+  title?: "Mr." | "Mrs." | "Ms." | "None";
 }
 
 export type View = "home" | "tracker" | "insights" | "calendar" | "settings";

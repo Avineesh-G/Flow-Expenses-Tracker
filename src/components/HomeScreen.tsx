@@ -3,7 +3,7 @@ import { TrendingUp, AlertCircle, RefreshCw, Download, X } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { format } from "date-fns";
 import { useGoogleSync } from "@/hooks/useGoogleSync";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Expense } from "@/types";
 import TransactionReviewModal from "./TransactionReviewModal";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
@@ -25,6 +25,20 @@ export default function HomeScreen() {
       alert("No new transactions found in your Gmail inbox from the trusted senders.");
     }
   };
+
+  useEffect(() => {
+    const lastSyncMonth = localStorage.getItem("flow_last_sync_month");
+    if (lastSyncMonth !== currentMonth) {
+      // Auto-sync on first open of the month
+      syncGmail().then((transactions) => {
+        if (transactions && transactions.length > 0) {
+          setPendingTransactions(transactions);
+          setIsReviewModalOpen(true);
+        }
+      });
+      localStorage.setItem("flow_last_sync_month", currentMonth);
+    }
+  }, [currentMonth, syncGmail]);
 
   const handleApprove = async (approved: Expense[]) => {
     await approveTransactions(approved);
@@ -88,12 +102,12 @@ export default function HomeScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8 flex items-start justify-between"
       >
-        <div>
-          <p className="text-stone-500 text-sm font-medium mb-1">
-            {format(new Date(), "EEEE, MMMM d")}
+        <div className="flex-1 flex flex-col items-center justify-center pt-2 pb-4">
+          <p className="text-sage-600 text-[10px] font-bold tracking-[0.2em] mb-1">
+            HELLO
           </p>
-          <h1 className="text-2xl font-semibold text-stone-800">
-            Good {getGreeting()}{settings.name ? `, ${settings.name}` : ""}
+          <h1 className="text-xl font-semibold text-stone-800 tracking-tight">
+            {settings.title ? `${settings.title} ` : ""}{settings.name || "There"}
           </h1>
         </div>
 
