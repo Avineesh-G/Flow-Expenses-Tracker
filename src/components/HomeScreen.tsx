@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, AlertCircle, RefreshCw, Download, X } from "lucide-react";
 import { useStore } from "@/store/useStore";
-import { format } from "date-fns";
 import { useGoogleSync } from "@/hooks/useGoogleSync";
 import { useState, useEffect } from "react";
 import type { Expense } from "@/types";
@@ -260,11 +259,4 @@ export default function HomeScreen() {
       />
     </div>
   );
-}
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "morning";
-  if (hour < 17) return "afternoon";
-  return "evening";
 }
