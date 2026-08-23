@@ -6,7 +6,6 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { googleLogout } from "@react-oauth/google";
 
 export interface GoogleUser {
   name: string;
@@ -87,11 +86,14 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(() => {
-    googleLogout();
+    // Revoke the token with Google so it's fully invalidated
+    if (accessToken) {
+      fetch(`https://oauth2.googleapis.com/revoke?token=${accessToken}`, { method: "POST" });
+    }
     setUser(null);
     setAccessToken(null);
     setError(null);
-  }, []);
+  }, [accessToken]);
 
   return (
     <GoogleAuthContext.Provider
