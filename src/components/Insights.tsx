@@ -30,12 +30,23 @@ export default function Insights() {
   const pocketLimit = settings.pocketMoneyLimit ?? 0;
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
+  const [filterType, setFilterType] = useState<"all" | "debit" | "credit">("all");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
 
   const monthExpenses = useMemo(() => {
-    return expenses
+    let filtered = expenses
       .filter((e) => e.date.startsWith(currentMonth))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [expenses, currentMonth]);
+      
+    if (filterType !== "all") {
+      filtered = filtered.filter(e => (e.type || "debit") === filterType);
+    }
+    if (filterCategory !== "all") {
+      filtered = filtered.filter(e => e.category === filterCategory);
+    }
+    
+    return filtered;
+  }, [expenses, currentMonth, filterType, filterCategory]);
 
   const handleDelete = (expense: Expense) => {
     if (confirm("Are you sure you want to delete this expense?")) {
@@ -248,7 +259,7 @@ export default function Insights() {
         </motion.div>
       )}
 
-      {monthExpenses.length > 0 && (
+      {expenses.some(e => e.date.startsWith(currentMonth)) && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -257,8 +268,32 @@ export default function Insights() {
           <h3 className="text-sm font-semibold text-stone-700 mb-3">
             All Transactions
           </h3>
-          <div className="space-y-2">
-            {monthExpenses.map((expense) => {
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 hide-scrollbar">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as any)}
+              className="text-xs bg-white border border-stone-200 text-stone-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-sage-200"
+            >
+              <option value="all">All Types</option>
+              <option value="debit">Spent</option>
+              <option value="credit">Received</option>
+            </select>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="text-xs bg-white border border-stone-200 text-stone-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-sage-200"
+            >
+              <option value="all">All Categories</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          {monthExpenses.length === 0 ? (
+            <p className="text-sm text-stone-500 text-center py-8 bg-white rounded-2xl border border-dashed border-stone-200">No transactions match the selected filters.</p>
+          ) : (
+            <div className="space-y-2">
+              {monthExpenses.map((expense) => {
               const cat = categories.find(c => c.id === expense.category);
               return (
                 <div
@@ -302,8 +337,9 @@ export default function Insights() {
                   </div>
                 </div>
               );
-            })}
-          </div>
+              })}
+            </div>
+          )}
         </motion.div>
       )}
 

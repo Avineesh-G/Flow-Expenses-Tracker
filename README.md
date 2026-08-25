@@ -36,6 +36,7 @@ This is not a spreadsheet with a UI. It feels like a *personal financial compani
 ### 📊 Spending Tracker & Insights
 - Monthly spending breakdown by category with a donut chart.
 - Navigate between months to view historical data.
+- **Filter transactions** by type (spent/received) and category to easily locate specific expenses.
 - Manually add, edit, or delete any expense.
 - **Student Mode** with pocket money limit and auto-calculated daily limit.
 
