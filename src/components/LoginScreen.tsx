@@ -177,8 +177,6 @@ export default function LoginScreen() {
         className="mt-10 text-xs text-stone-400 text-center"
       >
         Flow is entirely client-side. We never see or store your financial data.
-        <br />
-        <a href="/privacy" className="underline hover:text-stone-600 transition-colors">Read our Privacy Policy</a>
       </motion.p>
     </div>
   );
