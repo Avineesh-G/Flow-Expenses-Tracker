@@ -52,14 +52,14 @@ export default function AddExpenseModal({ isOpen, onClose }: Props) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-stone-900/20 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-stone-900/20 backdrop-blur-sm z-[60]"
           />
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 max-h-[90vh] overflow-auto"
+            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[60] max-h-[90vh] overflow-auto"
           >
             <div className="p-6 pb-24 max-w-md mx-auto">
               <div className="flex items-center justify-between mb-6">
