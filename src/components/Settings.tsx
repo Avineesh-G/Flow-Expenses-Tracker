@@ -5,7 +5,7 @@ import { useGoogleAuth } from "@/context/GoogleAuthContext";
 import { hapticLight } from "@/utils/haptics";
 
 export default function Settings() {
-  const { settings, updateSettings, clearAllData } = useStore();
+  const { settings, updateSettings, clearAllData, currentMonth, budgets, updateIncome } = useStore();
   const { user, signOut } = useGoogleAuth();
 
   const toggle = (key: keyof typeof settings) => {
@@ -105,6 +105,20 @@ export default function Settings() {
                     className="w-full px-3 py-2 bg-stone-50 rounded-xl border-0 text-stone-800 focus:ring-2 focus:ring-sage-300 outline-none"
                   />
                 </div>
+              </div>
+            )}
+            {settings.userType === "other" && (
+              <div>
+                <label className="text-xs text-stone-500 mb-1 block">Monthly Income (₹)</label>
+                <input
+                  type="number"
+                  value={budgets.find(b => b.month === currentMonth)?.income || ""}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    updateIncome(currentMonth, val);
+                  }}
+                  className="w-full px-3 py-2 bg-stone-50 rounded-xl border-0 text-stone-800 focus:ring-2 focus:ring-sage-300 outline-none"
+                />
               </div>
             )}
           </div>

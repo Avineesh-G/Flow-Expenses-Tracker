@@ -96,6 +96,7 @@ interface Store extends AppState {
   setCurrentMonth: (month: string) => void;
   updateSettings: (settings: Partial<UserSettings>) => void;
   updateBudget: (month: string, categoryId: string, amount: number) => void;
+  updateIncome: (month: string, income: number) => void;
   addSavingsGoal: (goal: Omit<SavingsGoal, "id">) => void;
   updateSavingsGoal: (id: string, amount: number) => void;
   getSafeToSpend: () => { today: number; week: number; month: number; onTrack: boolean };
@@ -181,6 +182,30 @@ export const useStore = create<Store>()(
                 fixedExpenses: 0,
                 savingsTarget: 0,
                 categoryBudgets: { [categoryId]: amount },
+              },
+            ],
+          };
+        }),
+
+      updateIncome: (month, income) =>
+        set((state) => {
+          const existing = state.budgets.find((b) => b.month === month);
+          if (existing) {
+            return {
+              budgets: state.budgets.map((b) =>
+                b.month === month ? { ...b, income } : b
+              ),
+            };
+          }
+          return {
+            budgets: [
+              ...state.budgets,
+              {
+                month,
+                income,
+                fixedExpenses: 0,
+                savingsTarget: 0,
+                categoryBudgets: {},
               },
             ],
           };

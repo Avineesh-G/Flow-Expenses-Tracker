@@ -21,7 +21,7 @@ const CATEGORY_RATIOS: Record<string, number> = {
 };
 
 export default function ProfileSetupScreen({ user, onComplete }: Props) {
-  const { categories, updateSettings, setCategoryBudgets } = useStore();
+  const { categories, updateSettings, setCategoryBudgets, updateIncome, currentMonth } = useStore();
   const [selectedType, setSelectedType] = useState<"student" | "other" | null>(null);
   const [limit, setLimit] = useState("");
   const [dailyLimit, setDailyLimit] = useState("");
@@ -64,7 +64,22 @@ export default function ProfileSetupScreen({ user, onComplete }: Props) {
       return;
     }
 
-    if (selectedType === "student") {
+    if (selectedType === "other") {
+      const numericIncome = parseFloat(limit);
+      if (limit && (isNaN(numericIncome) || numericIncome < 0)) {
+        setError("Please enter a valid monthly income.");
+        return;
+      }
+      hapticSuccess();
+      updateSettings({
+        userType: "other",
+        pocketMoneyLimit: undefined,
+        dailySpendLimit: undefined,
+      });
+      if (numericIncome > 0) {
+        updateIncome(currentMonth, numericIncome);
+      }
+    } else if (selectedType === "student") {
       const numericLimit = parseFloat(limit);
       const numericDailyLimit = parseFloat(dailyLimit);
       if (!limit || isNaN(numericLimit) || numericLimit <= 0) {
@@ -91,13 +106,6 @@ export default function ProfileSetupScreen({ user, onComplete }: Props) {
         userType: "student",
         pocketMoneyLimit: numericLimit,
         dailySpendLimit: numericDailyLimit,
-      });
-    } else {
-      hapticSuccess();
-      updateSettings({
-        userType: "other",
-        pocketMoneyLimit: undefined,
-        dailySpendLimit: undefined,
       });
     }
 
@@ -335,6 +343,38 @@ export default function ProfileSetupScreen({ user, onComplete }: Props) {
               </p>
             </div>
           </div>
+
+          <AnimatePresence>
+            {selectedType === "other" && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 pt-4 border-t border-stone-100 overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div>
+                  <label className="block text-xs font-semibold text-stone-600 mb-1.5">
+                    Monthly Income (₹) <span className="text-stone-400 font-normal">(Optional)</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-4 text-stone-400 font-medium">₹</span>
+                    <input
+                      type="number"
+                      pattern="[0-9]*"
+                      value={limit}
+                      onChange={(e) => {
+                        setLimit(e.target.value);
+                        setError(null);
+                      }}
+                      placeholder="e.g. 50000"
+                      className="w-full bg-stone-50 border border-stone-200/80 rounded-2xl py-3 pl-8 pr-4 text-stone-800 font-semibold text-sm focus:outline-none focus:border-sage-500 focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
 
