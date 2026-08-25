@@ -86,7 +86,13 @@ export default function Settings() {
                   <input
                     type="number"
                     value={settings.pocketMoneyLimit || ""}
-                    onChange={(e) => updateSettings({ pocketMoneyLimit: parseFloat(e.target.value) || undefined })}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      updateSettings({
+                        pocketMoneyLimit: val || undefined,
+                        dailySpendLimit: val > 0 ? Math.round(val / 30) : undefined,
+                      });
+                    }}
                     className="w-full px-3 py-2 bg-stone-50 rounded-xl border-0 text-stone-800 focus:ring-2 focus:ring-sage-300 outline-none"
                   />
                 </div>
@@ -125,7 +131,7 @@ export default function Settings() {
               {/* Intensity sub-section — only visible when haptics is ON */}
               {settings.hapticsEnabled && (
                 <div className="mt-3 ml-7 flex gap-2">
-                  {(["low", "medium", "high"] as const).map((level) => (
+                  {(["medium", "high"] as const).map((level) => (
                     <button
                       key={level}
                       onClick={() => {

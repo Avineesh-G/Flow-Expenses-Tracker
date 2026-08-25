@@ -173,6 +173,28 @@ export default function CalendarView() {
           </div>
         </motion.div>
       )}
+
+      {/* Monthly Report — Coming Soon */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ delay: 0.1 }}
+        className="mt-6 bg-white rounded-2xl p-5 shadow-soft border border-dashed border-sage-200"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-stone-700">
+            Monthly Report — {format(currentDate, "MMMM yyyy")}
+          </h3>
+          <span className="text-[10px] font-bold bg-sage-100 text-sage-700 px-2 py-0.5 rounded-full uppercase tracking-wide">
+            Coming Soon
+          </span>
+        </div>
+        <p className="text-xs text-stone-400 leading-relaxed">
+          A full spending analysis for this month — category breakdown, daily averages, and savings summary — will be available here automatically on the 1st of each month.
+        </p>
+      </motion.div>
     </div>
   );
 }
+

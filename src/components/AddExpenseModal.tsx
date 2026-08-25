@@ -4,7 +4,6 @@ import { X, Camera, Check, ChevronDown } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { suggestCategory } from "@/utils/categories";
 import { hapticSuccess, hapticLight } from "@/utils/haptics";
-import { useGoogleSync } from "@/hooks/useGoogleSync";
 
 interface Props {
   isOpen: boolean;
@@ -12,8 +11,7 @@ interface Props {
 }
 
 export default function AddExpenseModal({ isOpen, onClose }: Props) {
-  const { categories, addExpense, updateExpense } = useStore();
-  const { pushExpense } = useGoogleSync();
+  const { categories, addExpense } = useStore();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -27,10 +25,10 @@ export default function AddExpenseModal({ isOpen, onClose }: Props) {
     if (suggested && !category) setCategory(suggested);
   };
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(() => {
     if (!amount || !description) return;
 
-    const newExpense = addExpense({
+    addExpense({
       amount: parseFloat(amount),
       description,
       category: category || "misc",
@@ -43,18 +41,7 @@ export default function AddExpenseModal({ isOpen, onClose }: Props) {
     setDescription("");
     setCategory("");
     onClose();
-
-    try {
-      const updated = await pushExpense(newExpense);
-      if (updated.googleCalendarEventId) {
-        updateExpense(newExpense.id, {
-          googleCalendarEventId: updated.googleCalendarEventId,
-        });
-      }
-    } catch (e) {
-      console.error("Failed to sync new expense to Google Calendar:", e);
-    }
-  }, [amount, description, category, date, addExpense, updateExpense, pushExpense, onClose]);
+  }, [amount, description, category, date, addExpense, onClose]);
 
   return (
     <AnimatePresence>

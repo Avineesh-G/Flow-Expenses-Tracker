@@ -15,205 +15,7 @@ async function fetchJson<T>(url: string, token: string, options: RequestInit = {
   return response.json() as Promise<T>;
 }
 
-// 1. Google Calendar List / Create "Flow Expenses" Calendar
-export async function getOrCreateFlowCalendar(token: string): Promise<string> {
-  // Try to find the calendar first
-  const listUrl = "https://www.googleapis.com/calendar/v3/users/me/calendarList";
-  const listData = await fetchJson<{ items: any[] }>(listUrl, token);
-  
-  const existing = listData.items?.find(
-    (item) => item.summary === "Flow Expenses" && !item.deleted
-  );
-
-  if (existing) {
-    return existing.id;
-  }
-
-  // Create new calendar
-  const createUrl = "https://www.googleapis.com/calendar/v3/calendars";
-  const newCal = await fetchJson<{ id: string }>(createUrl, token, {
-    method: "POST",
-    body: JSON.stringify({ summary: "Flow Expenses" }),
-  });
-
-  return newCal.id;
-}
-
-// 2. Fetch all expenses from "Flow Expenses" Calendar
-export async function fetchExpensesFromCalendar(token: string, calendarId: string): Promise<Expense[]> {
-  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
-    calendarId
-  )}/events?maxResults=2500`;
-  
-  const data = await fetchJson<{ items: any[] }>(url, token);
-  const expenses: Expense[] = [];
-
-  if (!data.items) return [];
-
-  for (const event of data.items) {
-    const privateProps = event.extendedProperties?.private;
-    if (privateProps && privateProps.flow_id) {
-      expenses.push({
-        id: privateProps.flow_id,
-        amount: parseFloat(privateProps.flow_amount || "0"),
-        description: privateProps.flow_description || event.summary || "",
-        category: privateProps.flow_category || "misc",
-        date: event.start?.date || new Date().toISOString().slice(0, 10),
-        createdAt: event.created || new Date().toISOString(),
-        googleCalendarEventId: event.id,
-        merchant: privateProps.flow_merchant,
-        isRecurring: privateProps.flow_isRecurring === "true",
-        gmailMessageId: privateProps.flow_gmailMsgId,
-      });
-    }
-  }
-
-  return expenses;
-}
-
-// Get icon by category for Calendar display
-function getCategoryIcon(category: string): string {
-  switch (category) {
-    case "food": return "🍔";
-    case "transport": return "🚗";
-    case "shopping": return "🛍️";
-    case "entertainment": return "🎬";
-    case "bills": return "🔌";
-    case "health": return "❤️";
-    case "education": return "📚";
-    default: return "💸";
-  }
-}
-
-// 3. Create or update an expense as a Calendar event
-export async function createExpenseEvent(
-  token: string,
-  calendarId: string,
-  expense: Expense
-): Promise<string> {
-  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
-  
-  // Format end date to be the next day (all-day event rule)
-  const startDate = expense.date;
-  const startDateTime = new Date(startDate);
-  startDateTime.setDate(startDateTime.getDate() + 1);
-  const endDate = startDateTime.toISOString().slice(0, 10);
-
-  const icon = getCategoryIcon(expense.category);
-  const eventBody = {
-    summary: `${icon} ${expense.description} · ₹${expense.amount}`,
-    description: `Expense tracked via Flow App`,
-    start: { date: startDate },
-    end: { date: endDate },
-    extendedProperties: {
-      private: {
-        flow_id: expense.id,
-        flow_amount: expense.amount.toString(),
-        flow_category: expense.category,
-        flow_description: expense.description,
-        flow_merchant: expense.merchant || "",
-        flow_isRecurring: expense.isRecurring ? "true" : "false",
-        flow_gmailMsgId: expense.gmailMessageId || "",
-      },
-    },
-  };
-
-  const result = await fetchJson<{ id: string }>(url, token, {
-    method: "POST",
-    body: JSON.stringify(eventBody),
-  });
-
-  return result.id;
-}
-
-// 4. Delete an expense event from Calendar
-export async function deleteExpenseEvent(
-  token: string,
-  calendarId: string,
-  eventId: string
-): Promise<void> {
-  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
-    calendarId
-  )}/events/${encodeURIComponent(eventId)}`;
-
-  const headers = new Headers();
-  headers.set("Authorization", `Bearer ${token}`);
-
-  const response = await fetch(url, {
-    method: "DELETE",
-    headers,
-  });
-
-  if (!response.ok && response.status !== 404) {
-    const errorText = await response.text();
-    throw new Error(`Failed to delete event: ${errorText}`);
-  }
-}
-
-// 5. Upsert Daily Summary Event
-export async function updateDailySummaryEvent(
-  token: string,
-  calendarId: string,
-  date: string,
-  dayExpenses: Expense[]
-): Promise<void> {
-  if (dayExpenses.length === 0) return;
-
-  const total = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
-  
-  // Compute breakdown text
-  const byCategory: Record<string, number> = {};
-  dayExpenses.forEach((e) => {
-    byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
-  });
-  const descriptionLines = Object.entries(byCategory)
-    .map(([cat, amt]) => `${cat.toUpperCase()}: ₹${amt}`)
-    .join("\n");
-
-  const icon = "📊";
-  const summaryTitle = `${icon} Flow Daily Summary · ₹${total}`;
-
-  // Find existing summary event for this date
-  const listUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
-    calendarId
-  )}/events?timeMin=${date}T00:00:00Z&timeMax=${date}T23:59:59Z&maxResults=50`;
-  const listData = await fetchJson<{ items: any[] }>(listUrl, token);
-  
-  const existingSummary = listData.items?.find((e) => e.summary?.includes("Flow Daily Summary"));
-
-  const startDateTime = new Date(date);
-  startDateTime.setDate(startDateTime.getDate() + 1);
-  const endDate = startDateTime.toISOString().slice(0, 10);
-
-  const eventBody = {
-    summary: summaryTitle,
-    description: `Daily financial summary:\n\n${descriptionLines}`,
-    start: { date },
-    end: { date: endDate },
-  };
-
-  if (existingSummary) {
-    // Update existing
-    const updateUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
-      calendarId
-    )}/events/${encodeURIComponent(existingSummary.id)}`;
-    await fetchJson(updateUrl, token, {
-      method: "PUT",
-      body: JSON.stringify(eventBody),
-    });
-  } else {
-    // Create new
-    const createUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
-      calendarId
-    )}/events`;
-    await fetchJson(createUrl, token, {
-      method: "POST",
-      body: JSON.stringify(eventBody),
-    });
-  }
-}
-
-// 6. Gmail: Fetch messages matching transaction queries
+// Gmail: Fetch ALL messages matching transaction queries (paginated)
 export interface GmailMessageInfo {
   id: string;
   snippet: string;
@@ -238,20 +40,36 @@ export async function fetchTransactionEmails(token: string): Promise<GmailMessag
     "no-reply@nct.flipkart.com",
     "no-reply@flipkart.com"
   ];
-  
+
   const sendersQuery = validSenders.map(s => `from:${s}`).join(" OR ");
   const contentQuery = `(debited OR credited OR paid OR payment OR transaction OR received OR refund OR "Rs." OR "INR" OR "₹")`;
-  
-  // Fetch messages matching trusted financial senders AND financial keywords from the last 1 month
-  const q = encodeURIComponent(`(${sendersQuery}) ${contentQuery} newer_than:1m`);
-  const url = `https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=500&q=${q}`;
-  const data = await fetchJson<{ messages?: { id: string }[] }>(url, token);
 
-  if (!data.messages || data.messages.length === 0) return [];
+  // Fetch ALL matching emails — paginated, no time limit
+  const q = encodeURIComponent(`(${sendersQuery}) ${contentQuery}`);
+  
+  const allMessageRefs: { id: string }[] = [];
+  let pageToken: string | undefined = undefined;
+
+  // Paginate through ALL results
+  do {
+    const pageParam: string = pageToken ? `&pageToken=${pageToken}` : "";
+    const url: string = `https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=500&q=${q}${pageParam}`;
+    const data: { messages?: { id: string }[]; nextPageToken?: string } = await fetchJson<{
+      messages?: { id: string }[];
+      nextPageToken?: string;
+    }>(url, token);
+
+    if (data.messages) {
+      allMessageRefs.push(...data.messages);
+    }
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+
+  if (allMessageRefs.length === 0) return [];
 
   const results: GmailMessageInfo[] = [];
 
-  for (const msgRef of data.messages) {
+  for (const msgRef of allMessageRefs) {
     try {
       const msgUrl = `https://www.googleapis.com/gmail/v1/users/me/messages/${msgRef.id}`;
       const msg = await fetchJson<any>(msgUrl, token);
@@ -259,17 +77,15 @@ export async function fetchTransactionEmails(token: string): Promise<GmailMessag
       let body = "";
       // Extract email body text
       if (msg.payload?.parts) {
-        // Multi-part message
         const textPart = msg.payload.parts.find((part: any) => part.mimeType === "text/plain");
         if (textPart?.body?.data) {
           body = atob(textPart.body.data.replace(/-/g, "+").replace(/_/g, "/"));
         }
       } else if (msg.payload?.body?.data) {
-        // Single part message
         body = atob(msg.payload.body.data.replace(/-/g, "+").replace(/_/g, "/"));
       }
 
-      // If body is still empty, fallback to snippet
+      // Fallback to snippet
       if (!body) {
         body = msg.snippet || "";
       }
@@ -292,7 +108,7 @@ export async function fetchTransactionEmails(token: string): Promise<GmailMessag
   return results;
 }
 
-// 7. Parse email body into structured expense fields
+// Parse email body into structured expense fields
 export function parseEmailToExpense(msg: GmailMessageInfo): Omit<Expense, "id" | "createdAt"> | null {
   const text = msg.body + " " + msg.snippet;
 
@@ -302,7 +118,7 @@ export function parseEmailToExpense(msg: GmailMessageInfo): Omit<Expense, "id" |
     type = "credit";
   }
 
-  // Try to find amount:
+  // Try to find amount
   const amountRegexes = [
     /(?:Rs\.?|INR|₹)\s*([\d,]+(?:\.\d{2})?)/i,
     /debited\s+(?:by|for)?\s*(?:Rs\.?|INR|₹)?\s*([\d,]+(?:\.\d{2})?)/i,
@@ -323,7 +139,7 @@ export function parseEmailToExpense(msg: GmailMessageInfo): Omit<Expense, "id" |
   const amount = parseFloat(amountStr);
   if (isNaN(amount) || amount <= 0) return null;
 
-  // Try to find merchant:
+  // Try to find merchant
   const merchantRegexes = [
     /paid\s+to\s+([A-Za-z0-9\s&]{3,20})/i,
     /payment\s+to\s+([A-Za-z0-9\s&]{3,20})/i,
@@ -345,7 +161,6 @@ export function parseEmailToExpense(msg: GmailMessageInfo): Omit<Expense, "id" |
     }
   }
 
-  // Clean merchant name or generic fallback
   if (!merchant || merchant.toLowerCase().includes("vpa") || merchant.toLowerCase().includes("ref")) {
     if (text.toLowerCase().includes("swiggy")) merchant = "Swiggy";
     else if (text.toLowerCase().includes("zomato")) merchant = "Zomato";

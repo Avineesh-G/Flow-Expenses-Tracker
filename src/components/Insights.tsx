@@ -10,7 +10,6 @@ import {
 import { useStore } from "@/store/useStore";
 import { GraduationCap, AlertCircle, Edit2, Trash2 } from "lucide-react";
 import EditExpenseModal from "./EditExpenseModal";
-import { useGoogleSync } from "@/hooks/useGoogleSync";
 import type { Expense } from "@/types";
 import { format } from "date-fns";
 
@@ -26,7 +25,6 @@ const CATEGORY_RATIOS: Record<string, number> = {
 
 export default function Insights() {
   const { categories, currentMonth, settings, expenses, deleteExpense } = useStore();
-  const { removeExpense } = useGoogleSync();
   const stats = useStore.getState().getMonthlyStats(currentMonth);
   const isStudent = settings.userType === "student";
   const pocketLimit = settings.pocketMoneyLimit ?? 0;
@@ -39,10 +37,9 @@ export default function Insights() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [expenses, currentMonth]);
 
-  const handleDelete = async (expense: Expense) => {
+  const handleDelete = (expense: Expense) => {
     if (confirm("Are you sure you want to delete this expense?")) {
       deleteExpense(expense.id);
-      await removeExpense(expense);
     }
   };
 

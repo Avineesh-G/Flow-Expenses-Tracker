@@ -88,6 +88,8 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
             setAccessToken(token);
             localStorage.setItem("flow_google_token", token);
             localStorage.setItem("flow_google_user", JSON.stringify(profile));
+            // Flag that this is a fresh login (not a page refresh)
+            sessionStorage.setItem("flow_just_logged_in", "true");
           })
           .catch(() => setError("Failed to fetch user profile. Please try again."))
           .finally(() => setIsLoading(false));

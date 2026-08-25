@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { View } from "@/types";
 import { useGoogleAuth } from "@/context/GoogleAuthContext";
 import { useStore } from "@/store/useStore";
-import { useGoogleSync } from "@/hooks/useGoogleSync";
 import BottomNav from "@/components/BottomNav";
 import HomeScreen from "@/components/HomeScreen";
 import MonthlyTracker from "@/components/MonthlyTracker";
@@ -22,31 +21,32 @@ export default function App() {
   const [showSetup, setShowSetup] = useState(false);
   const { isAuthenticated, user } = useGoogleAuth();
   const { settings, updateSettings } = useStore();
-  const { syncFromCalendar } = useGoogleSync();
-  const wasAuthenticated = useRef(false);
+
+  // Track whether this is the first time seeing isAuthenticated=true in this session
+  // Using a ref so it survives re-renders but resets on page reload
+  const loginHandled = useRef(false);
 
   useEffect(() => {
     document.body.style.overscrollBehavior = "none";
   }, []);
 
-  // Detect the moment of login — show setup if new, otherwise welcome
+  // Only show setup/welcome on actual LOGIN, not on page refresh
+  // We detect a fresh login by checking if the token appeared in the URL hash
   useEffect(() => {
-    if (isAuthenticated && !wasAuthenticated.current) {
-      if (!settings.userType) {
-        setShowSetup(true);
-      } else {
-        setShowWelcome(true);
+    if (isAuthenticated && !loginHandled.current) {
+      loginHandled.current = true;
+      // Only show setup/welcome if the user JUST logged in (token was in URL hash)
+      const justLoggedIn = sessionStorage.getItem("flow_just_logged_in") === "true";
+      if (justLoggedIn) {
+        sessionStorage.removeItem("flow_just_logged_in");
+        if (!settings.userType) {
+          setShowSetup(true);
+        } else {
+          setShowWelcome(true);
+        }
       }
     }
-    wasAuthenticated.current = isAuthenticated;
   }, [isAuthenticated, settings.userType]);
-
-  // Trigger calendar fetch once user is authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      syncFromCalendar();
-    }
-  }, [isAuthenticated, syncFromCalendar]);
 
   // Sync Google profile into settings on login
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function App() {
     }
   }, [user, updateSettings]);
 
-  // Show login screen if not authenticated — no bypass
+  // Show login screen if not authenticated
   if (!isAuthenticated) {
     return <LoginScreen />;
   }

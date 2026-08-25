@@ -1,9 +1,8 @@
 import { useStore } from "@/store/useStore";
 
 const INTENSITY_SCALE: Record<string, number> = {
-  low: 0.4,
-  medium: 1,
-  high: 2.5,
+  medium: 5,
+  high: 12.5,
 };
 
 export const triggerHaptic = (pattern: number | number[] = 10) => {

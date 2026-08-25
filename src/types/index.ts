@@ -4,13 +4,12 @@ export interface Expense {
   amount: number;
   description: string;
   category: string;
-  date: string; // ISO date
+  date: string;
   createdAt: string;
   account?: string;
   reference?: string;
   isRecurring?: boolean;
   merchant?: string;
-  googleCalendarEventId?: string;
   gmailMessageId?: string;
 }
 
@@ -44,7 +43,7 @@ export interface UserSettings {
   currency: string;
   email: string;
   hapticsEnabled: boolean;
-  hapticsIntensity: "low" | "medium" | "high";
+  hapticsIntensity: "medium" | "high";
   reducedMotion: boolean;
   darkMode: boolean;
   emailDigest: "weekly" | "monthly" | "never";
@@ -63,6 +62,5 @@ export interface AppState {
   savingsGoals: SavingsGoal[];
   settings: UserSettings;
   currentMonth: string;
-  googleCalendarId?: string;
   importedGmailIds?: string[];
 }

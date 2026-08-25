@@ -109,7 +109,6 @@ interface Store extends AppState {
   getDuplicates: () => Expense[][];
   getUncategorized: () => Expense[];
   setExpenses: (expenses: Expense[]) => void;
-  setGoogleCalendarId: (calendarId: string) => void;
   addImportedGmailId: (gmailId: string) => void;
   clearAllData: () => void;
   setCategoryBudgets: (categoryBudgets: Record<string, number>) => void;
@@ -126,7 +125,6 @@ export const useStore = create<Store>()(
       savingsGoals: [],
       settings: defaultSettings,
       currentMonth: new Date().toISOString().slice(0, 7),
-      googleCalendarId: undefined,
       importedGmailIds: [],
 
       addExpense: (expense) => {
@@ -352,8 +350,6 @@ export const useStore = create<Store>()(
 
       setExpenses: (expenses) => set({ expenses }),
 
-      setGoogleCalendarId: (googleCalendarId) => set({ googleCalendarId }),
-
       addImportedGmailId: (gmailId) =>
         set((state) => ({
           importedGmailIds: [...(state.importedGmailIds || []), gmailId],
@@ -362,7 +358,6 @@ export const useStore = create<Store>()(
       clearAllData: () =>
         set({
           expenses: [],
-          googleCalendarId: undefined,
           importedGmailIds: [],
         }),
 
@@ -376,19 +371,20 @@ export const useStore = create<Store>()(
     }),
     {
       name: "flow-finance-store",
-      version: 2,
+      version: 3,
       migrate: (persistedState: unknown, version: number) => {
-        // On version upgrade, reset categories to fresh defaults and clear stale profile setup
-        if (version < 2) {
+        // V3: Remove Google Calendar integration, wipe all synced data for fresh start
+        if (version < 3) {
           const state = persistedState as Record<string, unknown>;
           return {
             ...state,
+            expenses: [],
+            importedGmailIds: [],
+            googleCalendarId: undefined,
             categories: defaultCategories,
             settings: {
               ...(state.settings as Record<string, unknown>),
-              userType: undefined,
-              pocketMoneyLimit: undefined,
-              dailySpendLimit: undefined,
+              hapticsIntensity: "medium",
             },
           };
         }
