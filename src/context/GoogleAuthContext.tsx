@@ -30,8 +30,6 @@ const SCOPES = [
   "profile",
   "email",
   "https://www.googleapis.com/auth/gmail.readonly",
-  "https://www.googleapis.com/auth/calendar",
-  "https://www.googleapis.com/auth/calendar.events",
 ].join(" ");
 
 async function fetchUserProfile(token: string): Promise<GoogleUser> {
