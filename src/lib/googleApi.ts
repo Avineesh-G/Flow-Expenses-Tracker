@@ -41,11 +41,11 @@ export async function fetchTransactionEmails(token: string): Promise<GmailMessag
     "no-reply@flipkart.com"
   ];
 
-  const sendersQuery = validSenders.map(s => `from:${s}`).join(" OR ");
-  const contentQuery = `(debited OR credited OR paid OR payment OR transaction OR received OR refund OR "Rs." OR "INR" OR "₹")`;
+  const sendersQuery = `{${validSenders.map(s => `from:${s}`).join(" ")}}`;
+  const contentQuery = `{debited credited paid payment transaction received refund "Rs." "INR"}`;
 
   // Fetch ALL matching emails — paginated, no time limit
-  const q = encodeURIComponent(`(${sendersQuery}) ${contentQuery}`);
+  const q = encodeURIComponent(`${sendersQuery} ${contentQuery}`);
   
   const allMessageRefs: { id: string }[] = [];
   let pageToken: string | undefined = undefined;
