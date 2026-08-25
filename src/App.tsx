@@ -13,6 +13,7 @@ import AddExpenseModal from "@/components/AddExpenseModal";
 import LoginScreen from "@/components/LoginScreen";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import ProfileSetupScreen from "@/components/ProfileSetupScreen";
+import PrivacyPolicy from "@/components/PrivacyPolicy";
 
 export default function App() {
   const [view, setView] = useState<View>("home");
@@ -57,6 +58,12 @@ export default function App() {
       });
     }
   }, [user, updateSettings]);
+
+  // Basic routing for static pages
+  const path = window.location.pathname;
+  if (path === "/privacy") {
+    return <PrivacyPolicy />;
+  }
 
   // Show login screen if not authenticated
   if (!isAuthenticated) {

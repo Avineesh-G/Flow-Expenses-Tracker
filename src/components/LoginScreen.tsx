@@ -129,9 +129,9 @@ export default function LoginScreen() {
         transition={{ delay: 0.7 }}
         className="mt-10 text-xs text-stone-400 text-center"
       >
-        Your expenses are stored in your Google Calendar.
+        Flow is entirely client-side. We never see or store your financial data.
         <br />
-        Flow never sees or stores your financial data.
+        <a href="/privacy" className="underline hover:text-stone-600 transition-colors">Read our Privacy Policy</a>
       </motion.p>
     </div>
   );
