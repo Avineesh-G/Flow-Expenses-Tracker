@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import {
-  signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   type User,
@@ -68,15 +68,13 @@ export function GoogleAuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     sessionStorage.setItem("flow_signing_in", "true");
     try {
-      await signInWithPopup(auth, googleProvider);
+      await signInWithRedirect(auth, googleProvider);
     } catch (err: unknown) {
       sessionStorage.removeItem("flow_signing_in");
       const msg = err instanceof Error ? err.message : "Sign-in failed";
-      // Ignore popup-closed-by-user errors
       if (!msg.includes("popup-closed-by-user") && !msg.includes("cancelled")) {
         setError("Could not sign in. Please try again.");
       }
-    } finally {
       setIsLoading(false);
     }
   };
