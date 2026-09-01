@@ -13,21 +13,28 @@ import AddExpenseModal from "@/components/AddExpenseModal";
 import LoginScreen from "@/components/LoginScreen";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import ProfileSetupScreen from "@/components/ProfileSetupScreen";
+import SmsPermissionPrompt from "@/components/SmsPermissionPrompt";
 import { useFirestoreSync } from "@/hooks/useFirestoreSync";
+import { useSmsSync, isNativeAndroid } from "@/hooks/useSmsSync";
+
+const SMS_PERMISSION_ASKED_KEY = "flow_sms_permission_asked";
 
 export default function App() {
   const [view, setView] = useState<View>("home");
   const [showAdd, setShowAdd] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
+  const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const { isAuthenticated, user } = useGoogleAuth();
   const { settings, updateSettings } = useStore();
 
   // Wire up Firestore real-time sync
   useFirestoreSync();
 
+  // Wire up automatic SMS sync (Android only — no-op on web)
+  useSmsSync();
+
   // Track whether this is the first time seeing isAuthenticated=true in this session
-  // Using a ref so it survives re-renders but resets on page reload
   const loginHandled = useRef(false);
 
   useEffect(() => {
@@ -35,11 +42,9 @@ export default function App() {
   }, []);
 
   // Only show setup/welcome on actual LOGIN, not on page refresh
-  // We detect a fresh login by checking if the token appeared in the URL hash
   useEffect(() => {
     if (isAuthenticated && !loginHandled.current) {
       loginHandled.current = true;
-      // Only show setup/welcome if the user JUST logged in (token was in URL hash)
       const justLoggedIn = sessionStorage.getItem("flow_just_logged_in") === "true";
       if (justLoggedIn) {
         sessionStorage.removeItem("flow_just_logged_in");
@@ -48,6 +53,12 @@ export default function App() {
         } else {
           setShowWelcome(true);
         }
+      }
+
+      // Show SMS permission prompt on Android if not asked before
+      if (isNativeAndroid() && !localStorage.getItem(SMS_PERMISSION_ASKED_KEY)) {
+        // Delay slightly so welcome/setup screen shows first
+        setTimeout(() => setShowSmsPrompt(true), 1500);
       }
     }
   }, [isAuthenticated, settings.userType]);
@@ -61,8 +72,6 @@ export default function App() {
       });
     }
   }, [user, updateSettings]);
-
-
 
   // Show login screen if not authenticated
   if (!isAuthenticated) {
@@ -116,6 +125,16 @@ export default function App() {
 
       <BottomNav current={view} onChange={setView} onAdd={() => setShowAdd(true)} />
       <AddExpenseModal isOpen={showAdd} onClose={() => setShowAdd(false)} />
+
+      {/* One-time SMS permission prompt for Android users */}
+      {showSmsPrompt && (
+        <SmsPermissionPrompt
+          onDone={() => {
+            localStorage.setItem(SMS_PERMISSION_ASKED_KEY, "true");
+            setShowSmsPrompt(false);
+          }}
+        />
+      )}
     </div>
   );
 }
