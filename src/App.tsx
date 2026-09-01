@@ -13,26 +13,18 @@ import AddExpenseModal from "@/components/AddExpenseModal";
 import LoginScreen from "@/components/LoginScreen";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import ProfileSetupScreen from "@/components/ProfileSetupScreen";
-import SmsPermissionPrompt from "@/components/SmsPermissionPrompt";
 import { useFirestoreSync } from "@/hooks/useFirestoreSync";
-import { useSmsSync, isNativeAndroid } from "@/hooks/useSmsSync";
-
-const SMS_PERMISSION_ASKED_KEY = "flow_sms_permission_asked";
 
 export default function App() {
   const [view, setView] = useState<View>("home");
   const [showAdd, setShowAdd] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
-  const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const { isAuthenticated, user } = useGoogleAuth();
   const { settings, updateSettings } = useStore();
 
   // Wire up Firestore real-time sync
   useFirestoreSync();
-
-  // Wire up automatic SMS sync (Android only — no-op on web)
-  useSmsSync();
 
   // Track whether this is the first time seeing isAuthenticated=true in this session
   const loginHandled = useRef(false);
@@ -53,12 +45,6 @@ export default function App() {
         } else {
           setShowWelcome(true);
         }
-      }
-
-      // Show SMS permission prompt on Android if not asked before
-      if (isNativeAndroid() && !localStorage.getItem(SMS_PERMISSION_ASKED_KEY)) {
-        // Delay slightly so welcome/setup screen shows first
-        setTimeout(() => setShowSmsPrompt(true), 1500);
       }
     }
   }, [isAuthenticated, settings.userType]);
@@ -125,16 +111,6 @@ export default function App() {
 
       <BottomNav current={view} onChange={setView} onAdd={() => setShowAdd(true)} />
       <AddExpenseModal isOpen={showAdd} onClose={() => setShowAdd(false)} />
-
-      {/* One-time SMS permission prompt for Android users */}
-      {showSmsPrompt && (
-        <SmsPermissionPrompt
-          onDone={() => {
-            localStorage.setItem(SMS_PERMISSION_ASKED_KEY, "true");
-            setShowSmsPrompt(false);
-          }}
-        />
-      )}
     </div>
   );
 }
