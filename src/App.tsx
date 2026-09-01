@@ -13,7 +13,7 @@ import AddExpenseModal from "@/components/AddExpenseModal";
 import LoginScreen from "@/components/LoginScreen";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import ProfileSetupScreen from "@/components/ProfileSetupScreen";
-
+import { useFirestoreSync } from "@/hooks/useFirestoreSync";
 
 export default function App() {
   const [view, setView] = useState<View>("home");
@@ -22,6 +22,9 @@ export default function App() {
   const [showSetup, setShowSetup] = useState(false);
   const { isAuthenticated, user } = useGoogleAuth();
   const { settings, updateSettings } = useStore();
+
+  // Wire up Firestore real-time sync
+  useFirestoreSync();
 
   // Track whether this is the first time seeing isAuthenticated=true in this session
   // Using a ref so it survives re-renders but resets on page reload

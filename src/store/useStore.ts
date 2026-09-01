@@ -110,6 +110,7 @@ interface Store extends AppState {
   getDuplicates: () => Expense[][];
   getUncategorized: () => Expense[];
   setExpenses: (expenses: Expense[]) => void;
+  setBudgets: (budgets: AppState["budgets"]) => void;
   addImportedGmailId: (gmailId: string) => void;
   clearAllData: () => void;
   setCategoryBudgets: (categoryBudgets: Record<string, number>) => void;
@@ -374,6 +375,8 @@ export const useStore = create<Store>()(
       },
 
       setExpenses: (expenses) => set({ expenses }),
+
+      setBudgets: (budgets) => set({ budgets }),
 
       addImportedGmailId: (gmailId) =>
         set((state) => ({

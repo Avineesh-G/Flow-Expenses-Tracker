@@ -1,11 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, AlertCircle, RefreshCw, Download, X, Leaf, TrendingDown } from "lucide-react";
+import { TrendingUp, AlertCircle, Download, X, Leaf, TrendingDown } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { format } from "date-fns";
-import { useGoogleSync } from "@/hooks/useGoogleSync";
-import { useState, useEffect } from "react";
-import type { Expense } from "@/types";
-import TransactionReviewModal from "./TransactionReviewModal";
+import { useState } from "react";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 
 const SAVING_QUOTES = [
@@ -52,51 +49,8 @@ const fadeUp = {
 
 export default function HomeScreen() {
   const { settings, getSafeToSpend, getUnusualSpending, expenses, budgets, currentMonth } = useStore();
-  const { isSyncing, error, syncGmail, approveTransactions } = useGoogleSync();
-  const [pendingTransactions, setPendingTransactions] = useState<Expense[]>([]);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const { isInstallable, isInstalled, install } = useInstallPrompt();
   const [installDismissed, setInstallDismissed] = useState(false);
-  const [syncMessage, setSyncMessage] = useState<string | null>(null);
-
-  const handleSync = async () => {
-    setSyncMessage(null);
-    const transactions = await syncGmail();
-    if (transactions && transactions.length > 0) {
-      setPendingTransactions(transactions);
-      setIsReviewModalOpen(true);
-    } else {
-      setSyncMessage("No new spending found. You're all caught up!");
-    }
-  };
-
-  // Clear sync message after 4 seconds
-  useEffect(() => {
-    if (syncMessage) {
-      const t = setTimeout(() => setSyncMessage(null), 4000);
-      return () => clearTimeout(t);
-    }
-  }, [syncMessage]);
-
-  // Auto-sync on first open of each month
-  useEffect(() => {
-    const lastSyncMonth = localStorage.getItem("flow_last_sync_month");
-    if (lastSyncMonth !== currentMonth) {
-      syncGmail().then((transactions) => {
-        if (transactions && transactions.length > 0) {
-          setPendingTransactions(transactions);
-          setIsReviewModalOpen(true);
-        }
-      });
-      localStorage.setItem("flow_last_sync_month", currentMonth);
-    }
-  }, [currentMonth, syncGmail]);
-
-  const handleApprove = async (approved: Expense[]) => {
-    await approveTransactions(approved);
-    setIsReviewModalOpen(false);
-    setPendingTransactions([]);
-  };
 
   const safe = getSafeToSpend();
   const unusual = getUnusualSpending();
@@ -173,51 +127,19 @@ export default function HomeScreen() {
         )}
       </AnimatePresence>
 
-      {/* Header: Greeting + Sync Button */}
+      {/* Header: Greeting */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8 flex items-start justify-between"
+        className="mb-8"
       >
-        <div>
-          <p className="text-stone-500 text-sm font-medium mb-1">
-            {format(new Date(), "EEEE, MMMM d")}
-          </p>
-          <h1 className="text-2xl font-semibold text-stone-800">
-            Good {getGreeting()}{settings.name ? `, ${settings.name}` : ""}
-          </h1>
-        </div>
-
-        <button
-          onClick={handleSync}
-          disabled={isSyncing}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all mt-1 ${
-            isSyncing
-              ? "bg-sage-100 text-sage-700 animate-pulse"
-              : error
-              ? "bg-rose-50 text-rose-600 hover:bg-rose-100"
-              : "bg-stone-50 text-stone-500 hover:bg-stone-100"
-          }`}
-          title="Sync latest transactions from Gmail"
-        >
-          <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""} />
-          <span>{isSyncing ? "Syncing..." : error ? "Retry Sync" : "Sync Gmail"}</span>
-        </button>
+        <p className="text-stone-500 text-sm font-medium mb-1">
+          {format(new Date(), "EEEE, MMMM d")}
+        </p>
+        <h1 className="text-2xl font-semibold text-stone-800">
+          Good {getGreeting()}{settings.name ? `, ${settings.name}` : ""}
+        </h1>
       </motion.div>
-
-      {/* Sync result message */}
-      <AnimatePresence>
-        {syncMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="mb-4 bg-sage-50 text-sage-700 text-sm font-medium px-4 py-2.5 rounded-2xl border border-sage-100"
-          >
-            {syncMessage}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Safe to Spend Card */}
       <motion.div
@@ -353,17 +275,6 @@ export default function HomeScreen() {
           </div>
         </motion.div>
       )}
-
-      <TransactionReviewModal
-        isOpen={isReviewModalOpen}
-        onClose={() => {
-          setIsReviewModalOpen(false);
-          setPendingTransactions([]);
-        }}
-        transactions={pendingTransactions}
-        onApprove={handleApprove}
-        isSyncing={isSyncing}
-      />
     </div>
   );
 }
